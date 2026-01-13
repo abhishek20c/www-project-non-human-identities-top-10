@@ -17,6 +17,8 @@ Moreover, 3rd parties can be exposed to hard-coded credentials within the codeba
 * **IDE Integration with Code Repositories** Developers often configure their IDEs to interact directly with code repositories like GitHub or GitLab. This setup requires supplying the IDE or its extensions with personal access tokens (PATs) or SSH keys to enable features like code syncing, pushing commits, and managing pull requests. If an extension is compromised, these credentials can be exposed, allowing unauthorized access to the developer's repositories and potentially sensitive organizational code.
 * **Extensions Accessing Cloud Resources** Extensions that facilitate deployment and testing on virtual machines or cloud services require access to cloud environments. Developers provide these extensions with NHIs such as API keys or access tokens to interact with services like AWS, Azure, or Google Cloud Platform. A malicious extension could use these credentials to access, modify, or delete cloud resources, leading to data breaches or service disruptions.
 * **3rd Party Service Provider** Developers integrate a 3rd party service provider such as Sisense to create a BI application. The developers create a privileged NHI such as database credentials and send them to the provider as part of the integration process. If the provider is breached, the attacker can leverage the NHI to gain access to the developer’s environment.
+* **Compromise via Salesloft Drift OAuth Tokens** GTIG (Google Threat Intelligence Group) observed a threat actor (UNC6395) exploiting compromised OAuth access tokens tied to the Salesloft Drift application. Between Aug 8-18 2025, these tokens were used to exfiltrate large volumes of Salesforce data. Once inside, the actor serached within the stolen data for sensitive credential - including AWS keys, Snowflake tokens and user credentials - and deleted query jobs to hamper detection. Addtional investigation confirmed that the breach reached beyond just Salesforce. OAuth tokens for other Drift integrations (such as "Drift Email") were also compromised. 
+
 
 
 ## How To Prevent
@@ -33,13 +35,21 @@ Moreover, 3rd parties can be exposed to hard-coded credentials within the codeba
    - Replace long-term secrets with short-lived, ephemeral credentials (e.g., AWS STS, Azure Managed Identities).  
    - Automate credential rotation to limit the impact of compromised third-party integrations.
 
+* **Prevent SaaS Token Exposure in Integrations**
+   - Treat every token as an identity: enforce **least privilege scopes** on OAuth tokens , limiting access per-application and per-integration
+   - Use **short-lived or refreshable tokens** and apply automatic rotation to reduce threat vector exposure
+   - Monitor and inventory all integrations with third-party apps; periodically review all OAuth tokens and revoke unused or suspicious ones.
+   - Enable **anomaly detection and behavior based alerting** for unusual OAuth token usage (e.g., access from unexpected endpoints, unusual API queries)
+   - Implement a **crisis response playbook** in case of a suspected breach, have a revocation and reissue process for all connected OAuth tokens and a review process for systems that use them.  
+
 
 ## References
 * [JetBrains Security Issue Affecting GitHub Plugin](https://blog.jetbrains.com/security/2024/06/updates-for-security-issue-affecting-intellij-based-ides-2023-1-and-github-plugin/)
 * [Malicious VSCode Extensions Stealing Data](https://blog.checkpoint.com/securing-the-cloud/malicious-vscode-extensions-with-more-than-45k-downloads-steal-pii-and-enable-backdoors/)
 * [Deep Dive into VSCode Extension Vulnerabilities](https://snyk.io/blog/visual-studio-code-extension-security-vulnerabilities-deep-dive/)
 * [Making sense out of the Sisense hack](https://medium.com/@ronilichtman/making-sense-out-of-the-sisense-hack-f61a3d9b80a7)
-
+* [Salesloft Drift Integration Used To Compromise Salesforce Instances](https://unit42.paloaltonetworks.com/threat-brief-compromised-salesforce-instances/)
+* [Widespread Data Theft Targets Salesforce Instances via Salesloft Drift](https://cloud.google.com/blog/topics/threat-intelligence/data-theft-salesforce-instances-via-salesloft-drift)
 
 ## Data points
 * [Datadog State of the Cloud 2024]((https://www.datadoghq.com/state-of-cloud-security/))
